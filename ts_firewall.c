@@ -88,7 +88,7 @@ static void _ts_decision_callback (TsCallbackContext_t *context, PMFIREWALL_Deci
 //hardcode for now
 #define STATISTICS_REPORTING_INTERVAL 10000
 #define xTEST_CONFIG_WALL
-#define GENERATE_TEST_EVENTS
+//#define GENERATE_TEST_EVENTS
 
 /**
  * Allocate and initialize a new firewall object.
