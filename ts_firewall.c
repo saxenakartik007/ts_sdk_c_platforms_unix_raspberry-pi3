@@ -115,7 +115,7 @@ static TsStatus_t ts_create( TsFirewallRef_t * firewall, TsStatus_t (*alert_call
 		return TsStatusErrorInternalServerError;
 	}
 
-	//MFIREWALL_registerDecisionCallback(&ts_callback_context, _ts_decision_callback);
+	MFIREWALL_registerDecisionCallback(&ts_callback_context, _ts_decision_callback);
 	ts_callback_context.alert_callback = alert_callback;
 
 	// initialize firewall object
