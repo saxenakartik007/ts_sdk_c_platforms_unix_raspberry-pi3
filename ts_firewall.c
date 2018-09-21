@@ -355,6 +355,7 @@ static void _ts_make_rejection_alert( TsMessageRef_t *alert, TsMessageRef_t *sou
 	char tmp [ 25 ];
 	TsMessageRef_t fields;
 	const char *protocol = NULL;
+	const char *interface = NULL;
 
 	char transactionid[UUID_SIZE];
 
@@ -373,7 +374,28 @@ static void _ts_make_rejection_alert( TsMessageRef_t *alert, TsMessageRef_t *sou
 	ts_message_set_int( fields, "packets", packets);
 	ts_message_set_string( fields, "sense", sense);
 
-	ts_message_set_string( fields, "interface", "lan"); // TODO: make this responsive; for now, it's always going to be Ethernet
+	switch(pDecisionInfo->networkInterface) {
+		case MFIREWALL_RULE_IF_LAN:
+			interface = "lan";
+			break;
+		case MFIREWALL_RULE_IF_WAN:
+			interface = "wan";
+			break;
+		case MFIREWALL_RULE_IF_WIFI:
+			interface = "wifi";
+			break;
+		case MFIREWALL_RULE_IF_PPP:
+			interface = "ppp";
+			break;
+		case MFIREWALL_RULE_IF_CELL:
+			interface = "cell";
+			break;
+		default:
+			interface = "unknown";
+			break;
+		}
+	}
+	ts_message_set_string( fields, "interface", interface);
 
 	switch(mfw_ip_header->protocol) {
 	case M_IP_PROTOCOL_ICMP:
