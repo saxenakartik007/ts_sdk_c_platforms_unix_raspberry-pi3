@@ -375,25 +375,24 @@ static void _ts_make_rejection_alert( TsMessageRef_t *alert, TsMessageRef_t *sou
 	ts_message_set_string( fields, "sense", sense);
 
 	switch(pDecisionInfo->networkInterface) {
-		case MFIREWALL_RULE_IF_LAN:
-			interface = "lan";
-			break;
-		case MFIREWALL_RULE_IF_WAN:
-			interface = "wan";
-			break;
-		case MFIREWALL_RULE_IF_WIFI:
-			interface = "wifi";
-			break;
-		case MFIREWALL_RULE_IF_PPP:
-			interface = "ppp";
-			break;
-		case MFIREWALL_RULE_IF_CELL:
-			interface = "cell";
-			break;
-		default:
-			interface = "unknown";
-			break;
-		}
+	case MFIREWALL_RULE_IF_LAN:
+		interface = "lan";
+		break;
+	case MFIREWALL_RULE_IF_WAN:
+		interface = "wan";
+		break;
+	case MFIREWALL_RULE_IF_WIFI:
+		interface = "wifi";
+		break;
+	case MFIREWALL_RULE_IF_PPP:
+		interface = "ppp";
+		break;
+	case MFIREWALL_RULE_IF_CELL:
+		interface = "cell";
+		break;
+	default:
+		interface = "unknown";
+		break;
 	}
 	ts_message_set_string( fields, "interface", interface);
 
