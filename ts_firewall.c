@@ -394,7 +394,7 @@ static void _ts_make_rejection_alert( TsMessageRef_t *alert, TsMessageRef_t *sou
 		interface = "unknown";
 		break;
 	}
-	ts_message_set_string( fields, "interface", interface);
+	ts_message_set_string( fields, "interface", (char *)interface);
 
 	switch(mfw_ip_header->protocol) {
 	case M_IP_PROTOCOL_ICMP:
