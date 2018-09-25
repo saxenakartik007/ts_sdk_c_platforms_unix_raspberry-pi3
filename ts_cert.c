@@ -2,6 +2,7 @@
 
 #include "ts_cert.h"
 #include "ts_platform.h"
+#include "ts_status.h"
 #include "ts_util.h"
 #include "ts_file.h"
 #include <sys/ioctl.h>
@@ -768,10 +769,12 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
 
  }
 
- }
+
 
 // MIT License code
 // https://github.com/paulej/AESKeyWrap
+
+ // This is from the header file - just prototypes
  /*
   *  AESKeyWrap.h
   *
@@ -787,10 +790,9 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
   *      None.
   */
 
- #ifndef __AES_KEY_WRAP_H__
- #define __AES_KEY_WRAP_H__
 
- #include <stdint.h>                             /* For uint32_t             */
+
+
 
  /*
   *  aes_ecb_encrypt
@@ -1097,7 +1099,7 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
                                  unsigned char *plaintext,
                                  unsigned int *plaintext_length);
 
- #endif /* __AES_KEY_WRAP_H__ */
+
 
 
 
@@ -1998,7 +2000,7 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
      return AESKW_OK;
  }
 
-
+#ifdef TEST_WRAP
 
  // main
  /*
@@ -2368,6 +2370,7 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
      return 0;
  }
 
+
  /*
   *  rfc3394_test
   *
@@ -2601,4 +2604,5 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
 
      return (0);
  }
+#endif
 
