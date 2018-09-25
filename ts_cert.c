@@ -12,11 +12,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+#include <arpa/inet.h>
 
 TsStatus_t _ts_scep_create( TsScepConfigRef_t, int);
 static TsStatus_t _ts_handle_get( TsMessageRef_t fields );
 static TsStatus_t _ts_handle_set( TsScepConfigRef_t scepconfig, TsMessageRef_t fields );
-static TsStatus_t  _ts_password_encrpyt(pConfig->_challengePassword, &passwordCt);
+static TsStatus_t  _ts_password_encrpyt(char*, char**);
 
 /**
  * Create a scep configuration object.
@@ -441,10 +443,10 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
 	 	// Encrypt the password aes256 ECB
 	 	snprintf(text_line, sizeof(text_line), "%s\n",pConfig->_challengePassword);
 	 	char* passwordCt = ts_platform_malloc(sizeof(pConfig->_challengePassword));
-        iret = _ts_password_encrpyt(pConfig->_challengePassword,&passwordCt);
+                iret = _ts_password_encrpyt(pConfig->_challengePassword,&passwordCt);
 
 	 	iret = 	 	ts_file_writeline(&handle,text_line);
-	 	ts_platform_free(pConfig->_challengePassword);
+	 	ts_platform_free(pConfig->_challengePassword, sizeof(pConfig->_challengePassword));
 	 	if (iret!=TsStatusOk)
 	 		goto error;
 
@@ -682,9 +684,9 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
 
  // See what interface this comes up with
  TsStatus_t getMAC(char* mac) {
-	 TsStatus_t iret = TsStatusOk
+	 TsStatus_t iret = TsStatusOk;
 
-			 struct ifreq ifr;
+	 struct ifreq ifr;
 	 struct ifconf ifc;
 	 char buf[1024];
 	 int success = 0;
@@ -749,10 +751,11 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
     return serial;
  }
 
- static TsStatus_t  _ts_password_encrpyt(* passwdPt, char**passwordCt)
+ static TsStatus_t  _ts_password_encrpyt(char* passwdPt, char** passwordCt)
  {
 	 uint8_t key256[32];  //256 bit key
-	 uint8_6 mac[6];
+	 uint8_t mac[6];
+	 TsStatus_t iret = TsStatusOk;
 
 	 // Form a 256 bit key from the MAC address and the RaspPi serial number
 	 iret = getMAC(&mac[0]);
@@ -763,6 +766,7 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
 	 memcpy(&key256[0], &mac[0],6); // 48 bits
 	 memcpy(&key256[6], &serial, 8); // 64 bits 112 bits
      // Rest remains 0 for now
+	 // Maybe hash the binary or something?
 
 	 // rfc 5649
 
@@ -1127,11 +1131,7 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
   *      OpenSSL with AES encryption via the EVP_*() APIs.
   */
 
- #include <string.h>
- #include <arpa/inet.h>
- #include <openssl/evp.h>
- #include <openssl/err.h>
- #include "AESKeyWrap.h"
+
 
  /*
   * Define module-level global constants
