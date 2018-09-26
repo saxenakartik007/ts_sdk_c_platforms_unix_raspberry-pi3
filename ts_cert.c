@@ -441,12 +441,13 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
 	 		goto error;
 
 	 	// Encrypt the password aes256 ECB
-	 	snprintf(text_line, sizeof(text_line), "%s\n",pConfig->_challengePassword);
-	 	char* passwordCt = ts_platform_malloc(sizeof(pConfig->_challengePassword));
-                iret = _ts_password_encrpyt(pConfig->_challengePassword,&passwordCt);
-
-	 	iret = 	 	ts_file_writeline(&handle,text_line);
-	 	ts_platform_free(pConfig->_challengePassword, sizeof(pConfig->_challengePassword));
+	 	uint32_t CtSize = sizeof(pConfig->_challengePassword)+8;
+	 	char* passwordCt = ts_platform_malloc(CtSize);
+        iret = _ts_password_encrpyt(pConfig->_challengePassword,sizeof(pConfig->_challengePassword), &passwordCt);
+	 	snprintf(text_line, CtSize, "%x\n",pConfig->_challengePassword);
+	 	iret = 	ts_file_writeline(&handle,text_line);
+	 	//iret = 	ts_file_writeline(&handle,text_line);
+	 	ts_platform_free(pConfig->_challengePassword, CtSize);
 	 	if (iret!=TsStatusOk)
 	 		goto error;
 
@@ -639,6 +640,14 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
 
 	 	// _challengePassword
 	    iret = ts_file_readline(&handle, text_line, sizeof(text_line));
+
+	    // Get a buffer for the PT (8 less that what it was)
+
+	    // Conver the ascii hex into binary
+	    // buffer for this as well - upto 20???
+
+	    // copy the PT back into the return structure
+	    // Decrypt the data, then is should be a string again.
 	 	if (TsStatusOk != iret)
 	 		goto error;
 	 	pConfig->_challengePassword = bfr_challengePassword;
@@ -751,8 +760,12 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
     return serial;
  }
 
- static TsStatus_t  _ts_password_encrpyt(char* passwdPt, char** passwordCt)
+ static TsStatus_t  _ts_password_encrpyt(char* passwdPt, uint32 PtLen, char** passwordCt)
  {
+
+	 hwAccelDescr    hwAccelCtx;
+	 ubyte*          pRetData = NULL;
+	 TsStatus_t  iret = TsStatusOk;
 	 uint8_t key256[32];  //256 bit key
 	 uint8_t mac[6];
 	 TsStatus_t iret = TsStatusOk;
@@ -765,17 +778,73 @@ TsStatus_t ts_scepconfig_save( TsScepConfig_t* pConfig, char* path, char* filena
 	 memset(&key256[0],0,sizeof(key256));
 	 memcpy(&key256[0], &mac[0],6); // 48 bits
 	 memcpy(&key256[6], &serial, 8); // 64 bits 112 bits
-     // Rest remains 0 for now
-	 // Maybe hash the binary or something?
+
 
 	 // rfc 5649
+	 MSTATUS ret = AESKWRAP_encrypt( MOC_SYM(hwAccelCtx) &key256[0],
+			 256/8 , passwdPt,  PtLen,
+			 *passwordCt); /* SHould be dataLen + 8 */
+
+	 if (ret == Check)
+		 iret = TsStatusFail;
+
+	 return iret;
+ }
+
+ static TsStatus_t  _ts_password_decrypt(char* passCt, uint32 CtLen, char** passwordPt)
+ {
+
+	 hwAccelDescr    hwAccelCtx;
+	 TsStatus_t      iret = TsStatusOk;
+	 uint8_t key256[32];  //256 bit key
+	 uint8_t mac[6];
+	 TsStatus_t iret = TsStatusOk;
+
+	 // Form a 256 bit key from the MAC address and the RaspPi serial number
+	 iret = getMAC(&mac[0]);
+
+	 uint64_t serial = getSerial();
+
+	 memset(&key256[0],0,sizeof(key256));
+	 memcpy(&key256[0], &mac[0],6); // 48 bits
+	 memcpy(&key256[6], &serial, 8); // 64 bits 112 bits
+
+#if 0
+	 // rfc 5649
+	 MSTATUS iret = AESKWRAP_encrypt( MOC_SYM(hwAccelCtx) &key256[0],
+			 256/8 , passwdPt,  PtLen,
+			 *passwordCt); /* SHould be dataLen + 8 */
+#endif
+	 MSTATUS ret  =
+	 AESKWRAP_decrypt(MOC_SYM(hwAccelDescr hwAccelCtx) &key256[0], 256/8,
+	                  passCt, CtLen,
+	                  *passwordPt);  /* retun data -8 len */
+
+	 if (ret == what)
+		 iret = TsStatusFail;
+
+	 return iret;
 
 
  }
-
-
-
 #if 0
+ extern MSTATUS
+ AESKWRAP_decrypt(MOC_SYM(hwAccelDescr hwAccelCtx) ubyte* keyMaterial,
+                  sbyte4 keyLength, const ubyte* data, ubyte4 dataLen,
+                  ubyte * retData /* datalen - 8 */ )
+ {
+     MSTATUS status;
+
+     ///
+     extern MSTATUS
+     AESKWRAP_encrypt( MOC_SYM(hwAccelDescr hwAccelCtx) ubyte* keyMaterial,
+                      sbyte4 keyLength, const ubyte* data, ubyte4 dataLen,
+                      ubyte * retData/* SHould be dataLen + 8 */)
+     {
+       return AESKWRAP_encryptAux (
+         MOC_SYM(hwAccelCtx) MOC_AES_WRAP_OLD_CODE, keyMaterial, keyLength,
+         data, dataLen, 0, kIV3394, retData);
+     }
 
  // fragments mocana
 
